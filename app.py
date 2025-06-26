@@ -1,6 +1,7 @@
-from flask import Flask, request, send_file, render_template
+from flask import Flask, request, send_file, render_template, jsonify
 from utils import download_gallery
-import os
+import requests
+from bs4 import BeautifulSoup
 
 app = Flask(__name__)
 
@@ -21,6 +22,26 @@ def download():
         return send_file(zip_path, as_attachment=True)
     except Exception as e:
         return {"error": str(e)}, 500
+
+@app.route("/preview", methods=["POST"])
+def preview():
+    data = request.json
+    url = data.get("url")
+    try:
+        headers = {"User-Agent": "Mozilla/5.0"}
+        resp = requests.get(url, headers=headers)
+        resp.raise_for_status()
+        soup = BeautifulSoup(resp.content, "html.parser")
+        first_img = soup.select_one(".gallerythumb img")
+        if first_img and ("data-src" in first_img.attrs or "src" in first_img.attrs):
+            src = first_img.get("data-src") or first_img.get("src")
+            gallery_id = src.split("/galleries/")[1].split("/")[0]
+            cover_url = f"https://t1.nhentai.net/galleries/{gallery_id}/cover.jpg.webp"
+            return jsonify({"cover_url": cover_url})
+        else:
+            return jsonify({"error": "Could not find cover image"}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
     app.run(debug=True)

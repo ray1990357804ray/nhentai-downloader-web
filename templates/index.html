@@ -1,25 +1,28 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>nhentai Downloader</title>
-  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="/static/style.css" />
 </head>
 <body>
   <div class="container">
     <h1>nhentai Downloader</h1>
+
+    <!-- Preview container -->
+    <div id="preview-container" style="margin-bottom: 1rem; text-align: center;">
+      <!-- Preview image will be injected here -->
+    </div>
+
     <form id="downloadForm">
-      <input type="text" name="url" placeholder="Gallery URL" required><br>
-      <input type="text" name="artist" placeholder="Artist Name" required><br>
-      <input type="text" name="title" placeholder="Story Title" required><br>
-      <input type="text" name="labels" placeholder="Labels (comma-separated)"><br>
+      <input type="text" name="url" placeholder="Gallery URL" required /><br />
+      <input type="text" name="artist" placeholder="Artist Name" required /><br />
+      <input type="text" name="title" placeholder="Story Title" required /><br />
+      <input type="text" name="labels" placeholder="Labels (comma-separated)" /><br />
       <button type="submit">Download</button>
     </form>
-    <p id="status"></p>
-    <div id="loading" style="display: none;">
-  <p style="color: #ff2d95; font-weight: bold;">🔄 Downloading...</p>
-</div>
 
+    <p id="status"></p>
   </div>
   <script src="/static/script.js"></script>
 </body>
