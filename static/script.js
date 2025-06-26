@@ -1,75 +1,76 @@
-const urlInput = document.querySelector('input[name="url"]');
-const previewContainer = document.getElementById("preview-container");
-const status = document.getElementById("status");
-const form = document.getElementById("downloadForm");
+document.addEventListener("DOMContentLoaded", () => {
+  const urlInput = document.getElementById("url-input");
+  const previewContainer = document.getElementById("preview-container");
+  const downloadForm = document.getElementById("downloadForm");
+  const status = document.getElementById("status");
+document.querySelector('input[name="artist"]').style.display = 'none';
+document.querySelector('input[name="title"]').style.display = 'none';
+document.querySelector('input[name="labels"]').style.display = 'none';
 
-urlInput.addEventListener("input", async () => {
-  const url = urlInput.value.trim();
-  previewContainer.innerHTML = "";
-  if (!url) return;
-
-  // Show loading text or spinner
-  previewContainer.textContent = "Loading preview...";
-
-  try {
-    const res = await fetch("/preview", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url }),
-    });
-
-    if (!res.ok) throw new Error("Preview fetch failed");
-
-    const data = await res.json();
-
-    if (data.cover_url) {
-      previewContainer.innerHTML = `<img class="lazyload" width="350" height="490" src="${data.cover_url}" alt="Gallery Cover" style="border-radius:12px; box-shadow:0 0 15px #ff2d95;" />`;
-    } else {
-      previewContainer.textContent = "No preview available.";
-    }
-  } catch (e) {
-    previewContainer.textContent = "Error loading preview.";
-  }
-});
-
-// Existing download form submission logic
-form.addEventListener("submit", async (e) => {
-  e.preventDefault();
-
-  const data = {
-    url: form.url.value,
-    artist: form.artist.value,
-    title: form.title.value,
-    labels: form.labels.value,
-  };
-
-  status.textContent = "";
-  previewContainer.style.display = "none"; // Optionally hide preview on download
-
-  status.textContent = "Downloading...";
-
-  try {
-    const res = await fetch("/download", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.error || "Download failed");
+  async function updatePreview() {
+    const url = urlInput.value.trim();
+    if (!url) {
+      previewContainer.innerHTML = "";
+      return;
     }
 
-    const blob = await res.blob();
-    const a = document.createElement("a");
-    a.href = window.URL.createObjectURL(blob);
-    a.download = "gallery.zip";
-    a.click();
+    try {
+      const response = await fetch("/preview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url }),
+      });
+      const data = await response.json();
 
-    status.textContent = "✅ Download complete!";
-  } catch (err) {
-    status.textContent = `❌ Error: ${err.message}`;
-  } finally {
-    previewContainer.style.display = "block"; // Show preview again after download
+      if (data.cover_url) {
+        previewContainer.innerHTML = `<img src="${data.cover_url}" alt="Gallery Preview" width="350" height="490" />`;
+      } else {
+        previewContainer.innerHTML = `<p style="color:#f33;">Preview not found</p>`;
+      }
+    } catch (err) {
+      previewContainer.innerHTML = `<p style="color:#f33;">Error loading preview</p>`;
+    }
   }
+
+  urlInput.addEventListener("input", updatePreview);
+
+  downloadForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    status.textContent = "Downloading... Please wait.";
+
+    const formData = {
+      url: urlInput.value.trim(),
+      artist: downloadForm.artist.value.trim(),
+      title: downloadForm.title.value.trim(),
+      labels: downloadForm.labels.value.trim(),
+    };
+
+    try {
+      const response = await fetch("/download", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        status.textContent = `Error: ${error.error || "Unknown error"}`;
+        return;
+      }
+
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = downloadUrl;
+      a.download = `${formData.artist} - ${formData.title}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(downloadUrl);
+
+      status.textContent = "Download complete!";
+    } catch (err) {
+      status.textContent = `Error: ${err.message}`;
+    }
+  });
 });

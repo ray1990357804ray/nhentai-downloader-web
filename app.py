@@ -37,7 +37,7 @@ def preview():
         if first_img and ("data-src" in first_img.attrs or "src" in first_img.attrs):
             src = first_img.get("data-src") or first_img.get("src")
             gallery_id = src.split("/galleries/")[1].split("/")[0]
-            cover_url = f"https://t1.nhentai.net/galleries/{gallery_id}/cover.jpg.webp"
+            cover_url = f"https://t2.nhentai.net/galleries/{gallery_id}/cover.jpg.webp"
             return jsonify({"cover_url": cover_url})
         else:
             return jsonify({"error": "Could not find cover image"}), 400
@@ -47,4 +47,3 @@ def preview():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=True)
-
